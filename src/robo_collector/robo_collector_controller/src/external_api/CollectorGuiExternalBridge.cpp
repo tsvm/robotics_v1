@@ -41,8 +41,10 @@ void CollectorGuiExternalBridge::publishToggleHelpPage() const {
 
 void CollectorGuiExternalBridge::publishRobotAct(
     [[maybe_unused]]MoveType moveType) const {
-  LOGR("Oh no ... nothing happened ... and the buttons remained locked. "
-       "Maybe something will unlock them externally?");
+  LOGR("Sending click message %d", moveType);
+  RobotMoveType msg;
+  msg.move_type = getMoveTypeField(moveType);
+  _robotMoveTypePublisher->publish(msg);
 }
 
 void CollectorGuiExternalBridge::publishUserAuthenticate(const UserData &data) {
@@ -79,6 +81,9 @@ ErrorCode CollectorGuiExternalBridge::initCommunication() {
   constexpr auto queueSize = 10;
   _userAuthenticatePublisher = create_publisher<UserAuthenticate>(
       USER_AUTHENTICATE_TOPIC, queueSize);
+
+  _robotMoveTypePublisher = create_publisher<RobotMoveType>(
+      ROBOT_MOVE_TYPE_TOPIC, queueSize);
 
   rclcpp::QoS qos(queueSize);
   qos.transient_local(); //enable message latching for late joining subscribers
@@ -125,4 +130,3 @@ void CollectorGuiExternalBridge::onControllerShutdownMsg(
 
   _outInterface.invokeActionEventCb(f, ActionEventType::NON_BLOCKING);
 }
-
