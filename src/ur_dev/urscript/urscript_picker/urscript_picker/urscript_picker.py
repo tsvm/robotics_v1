@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 
 # Home position - joints and positions
-POS_HOME_JOINTS = [-90, -90, -90, -90, 90, 0]
+POS_HOME_JOINTS = [-1.57, -1.57, -1.57, -1.57, 1.57, 0]
 POS_HOME_XYZ = [-0.171, -0.682, 0.428, 0, 3.148, 0]
 
 # Boxes initial positions, as indexed in the task description
@@ -38,6 +38,13 @@ POS_NEW_8 = [0.0, -0.440, 0.050] + BOXES_R
 POS_NEW_9 = [0.0, -0.440, 0.160] + BOXES_R
 POS_NEW_10 = [0.0, -0.440, 0.270] + BOXES_R
 
+
+POS_ADD_1 = [0.0, -0.440, 0.380] + BOXES_R
+POS_ADD_2 = [0.0, -0.440, 0.490] + BOXES_R
+POS_ADD_3 = [0.0, -0.440, 0.600] + BOXES_R
+POS_ADD_4 = [0.0, -0.440, 0.710] + BOXES_R
+
+
 ABOVE_BOX_Z_DIST = 0.20
 ABOVE_BOX_Z_DIST_CLOSE = 0.02
 
@@ -62,6 +69,11 @@ NEW_POSITIONS = [POS_NEW_1,
                  POS_NEW_8,
                  POS_NEW_9,
                  POS_NEW_10]
+
+
+BONUS_POSITIONS_INITIAL = [POS_BOX_7, POS_BOX_8, POS_BOX_14, POS_BOX_9]
+BONUS_POSITIONS_TARGET = [POS_ADD_1, POS_ADD_2, POS_ADD_3, POS_ADD_4]
+
 
 URSCRIPT_SERVICE = "urscript_service"
 
@@ -161,8 +173,8 @@ def move_box(urscript_client, pos_from, pos_to):
     # go_home(urscript_client)
 
 
-def pick_and_place(urscript_client):
-    for i, (pos_from, pos_to) in enumerate(zip(INITIAL_POSITIONS, NEW_POSITIONS)):
+def pick_and_place(urscript_client, initial_positions, target_positions):
+    for i, (pos_from, pos_to) in enumerate(zip(initial_positions, target_positions)):
         print(f"moving box {i+1} from [{pos_from}] to [{pos_to}]")
         move_box(urscript_client, pos_from, pos_to)    
 
@@ -173,10 +185,13 @@ def main():
     urscript_client = URScriptClientAsync()
     
     # Move the robot to the home position before starting the process
-    # go_home(urscript_client)
+    go_home_j(urscript_client)
 
     # Perform the whole pick-and-place process
-    pick_and_place(urscript_client)    
+    pick_and_place(urscript_client, INITIAL_POSITIONS, NEW_POSITIONS)
+
+    # If the above succeeds, place the last 4 boxes
+    pick_and_place(urscript_client, BONUS_POSITIONS_INITIAL, BONUS_POSITIONS_TARGET)
     
     urscript_client.destroy_node()
     rclpy.shutdown()
