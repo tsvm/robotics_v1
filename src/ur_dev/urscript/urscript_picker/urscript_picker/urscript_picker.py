@@ -4,16 +4,13 @@ from urscript_interfaces.srv import UrScript
 import rclpy
 from rclpy.node import Node
 
-# import positions
-# from positions import * # all position constants
-
-
 # Home position - joints and positions
 POS_HOME_JOINTS = [-90, -90, -90, -90, 90, 0]
 POS_HOME_XYZ = [-0.171, -0.682, 0.428, 0, 3.148, 0]
 
 # Boxes initial positions, as indexed in the task description
-BOXES_R = [2.224, -2.224, 0]
+# BOXES_R = [2.224, -2.224, 0]
+BOXES_R = [0.0, 3.148, 0.0]
 POS_BOX_1 = [0.491, -0.134, -0.060] + BOXES_R
 POS_BOX_2 = [0.487, 0.042, -0.060] + BOXES_R
 POS_BOX_3 = [0.491, 0.240, -0.060] + BOXES_R
@@ -44,16 +41,16 @@ POS_NEW_10 = [0.0, -0.440, 0.270] + BOXES_R
 ABOVE_BOX_Z_DIST = 0.20
 ABOVE_BOX_Z_DIST_CLOSE = 0.02
 
-INITIAL_POSITIONS = [POS_BOX_10, # 1
+INITIAL_POSITIONS = [POS_BOX_10, #POS_BOX_10, # 1
                      POS_BOX_12, # 2
-                     POS_BOX_13, # 3
+                     POS_BOX_11, # 3
                      POS_BOX_1,  # 4
                      POS_BOX_2,  # 5
                      POS_BOX_4,  # 6
                      POS_BOX_5,  # 7
-                     POS_BOX_7,  # 8
-                     POS_BOX_8,  # 9
-                     POS_BOX_3]  # 10
+                     POS_BOX_6,  # 8
+                     POS_BOX_3,  # 9
+                     POS_BOX_13]  # 10
 
 NEW_POSITIONS = [POS_NEW_1,
                  POS_NEW_2,
@@ -88,7 +85,7 @@ class URScriptClientAsync(Node):
 def send_urscript_command(urscript_client, urscript_command):
     urscript_client.get_logger().info("=>Executing " + urscript_command)
     response = urscript_client.send_request(urscript_command)
-    urscript_client.get_logger.info('--> Result for URScript command for %s: %d : %s' %
+    urscript_client.get_logger().info('--> Result for URScript command for %s: %d : %s' %
         (urscript_command, int(response.success), response.error_reason))
 
 
@@ -141,6 +138,9 @@ def move_box(urscript_client, pos_from, pos_to):
     # Close gripper to get box
     close_gripper(urscript_client)
 
+    # Raise the box
+    movel(urscript_client, pos_from_above)
+
     # Move to new position - above
     pos_to_above = pos_to.copy()
     pos_to_above[2] += ABOVE_BOX_Z_DIST
@@ -148,19 +148,22 @@ def move_box(urscript_client, pos_from, pos_to):
 
     # Move down
     pos_to_close = pos_to.copy()
-    pos_to_close += ABOVE_BOX_Z_DIST_CLOSE
+    pos_to_close[2] += ABOVE_BOX_Z_DIST_CLOSE
     movel(urscript_client, pos_to_close)
 
     # Open gripper to place box
     open_gripper(urscript_client)
 
+    # Go up
+    movel(urscript_client, pos_to_above)
+
     # Go to the home position
-    go_home(urscript_client)
+    # go_home(urscript_client)
 
 
 def pick_and_place(urscript_client):
-    for pos_from, pos_to in zip(INITIAL_POSITIONS, NEW_POSITIONS):
-        print(f"moving from [{pos_from}] to [{pos_to}]")
+    for i, (pos_from, pos_to) in enumerate(zip(INITIAL_POSITIONS, NEW_POSITIONS)):
+        print(f"moving box {i+1} from [{pos_from}] to [{pos_to}]")
         move_box(urscript_client, pos_from, pos_to)    
 
 
