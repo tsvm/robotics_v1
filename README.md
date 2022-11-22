@@ -1,5 +1,34 @@
 # robotics_v1
 
+Extension of the original repo with the addition of **urscript_picker**.
+
+**URScript Picker**
+
+The package **urscript_picker** performs box movement from one place to another. 
+
+It is written in Python, and is tested with version 3.8.10. No additional Python packages need to be installed.
+
+First, build the package with colcon:
+
+```
+colcon build --packages-select urscript_picker 
+```
+
+In another terminal tab, source the setup:
+
+```
+. install/setup.bash 
+```
+
+and then run the package:
+
+```
+ros2 run urscript_picker urscript_picker 
+```
+
+
+*The content below is unmodified from the original repo.*
+
 **A mostly C++ ROS2 workspace**
 
 The workspace contains several interesting visual mini-games with their respective ROS2 interfaces
