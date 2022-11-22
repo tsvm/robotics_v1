@@ -9,7 +9,7 @@ PACKAGE_NAME = "urscript_picker"
 URSCRIPT_SERVICE = "urscript_service"
 
 # Constant used to indicate whether to perform gripper open and close in demo mode
-DEMO = True 
+DEMO = False 
 
 
 ##################################################################
