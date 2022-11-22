@@ -1,8 +1,20 @@
-import sys
+import sys, os
 
 from urscript_interfaces.srv import UrScript
 import rclpy
 from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
+
+PACKAGE_NAME = "urscript_picker"
+URSCRIPT_SERVICE = "urscript_service"
+
+# Constant used to indicate whether to perform gripper open and close in demo mode
+DEMO = True 
+
+
+##################################################################
+# POSITIONS CONSTANTS
+##################################################################
 
 # Home position - joints and positions
 POS_HOME_JOINTS = [-1.57, -1.57, -1.57, -1.57, 1.57, 0]
@@ -44,11 +56,11 @@ POS_ADD_2 = [0.0, -0.440, 0.490] + BOXES_R
 POS_ADD_3 = [0.0, -0.440, 0.600] + BOXES_R
 POS_ADD_4 = [0.0, -0.440, 0.710] + BOXES_R
 
-
+# Distance from which to approach the boxes before picking
 ABOVE_BOX_Z_DIST = 0.20
 ABOVE_BOX_Z_DIST_CLOSE = 0.02
 
-INITIAL_POSITIONS = [POS_BOX_10, #POS_BOX_10, # 1
+INITIAL_POSITIONS = [POS_BOX_10, # 1
                      POS_BOX_12, # 2
                      POS_BOX_11, # 3
                      POS_BOX_1,  # 4
@@ -70,12 +82,19 @@ NEW_POSITIONS = [POS_NEW_1,
                  POS_NEW_9,
                  POS_NEW_10]
 
-
+# Bonus positions
 BONUS_POSITIONS_INITIAL = [POS_BOX_7, POS_BOX_8, POS_BOX_14, POS_BOX_9]
 BONUS_POSITIONS_TARGET = [POS_ADD_1, POS_ADD_2, POS_ADD_3, POS_ADD_4]
 
 
-URSCRIPT_SERVICE = "urscript_service"
+##################################################################
+# URSCRIPT CONSTANTS
+##################################################################
+# Paths to script files
+SCRIPTS_DIR = os.path.join(get_package_share_directory(PACKAGE_NAME), "scripts")
+SCRIPT_GRIPPER_OPEN = "gripper_open.script"
+SCRIPT_GRIPPER_CLOSE = "gripper_close.script"
+
 
 
 class URScriptClientAsync(Node):
@@ -119,12 +138,27 @@ def movel(urscript_client, position, velocity="0.3", radius="0.0"):
     send_urscript_command(urscript_client, command)    
 
 
+def read_script_from_file(script_file):
+    print('Reading script from file', script_file)
+    f = open(SCRIPTS_DIR + "/" + script_file, "r")
+    script = f.read()
+    return script 
+
+
 def open_gripper(urscript_client):
     print('Opening gripper')
+    command = read_script_from_file(SCRIPT_GRIPPER_OPEN)
+    print(DEMO)
+    if not DEMO:
+        send_urscript_command(urscript_client, command)    
 
 
 def close_gripper(urscript_client):
     print('Closing gripper')
+    command = read_script_from_file(SCRIPT_GRIPPER_CLOSE)
+    print(DEMO)
+    if not DEMO:
+        send_urscript_command(urscript_client, command)    
 
 
 def go_home_j(urscript_client):
@@ -180,6 +214,7 @@ def pick_and_place(urscript_client, initial_positions, target_positions):
 
 
 def main():
+    print('IS DEMO?', DEMO)
     rclpy.init()
 
     urscript_client = URScriptClientAsync()
